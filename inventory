@@ -1,3 +1,11 @@
+[web_servers]
 server1@192.168.1.47 
-server2@192.168.1.46
+
+[db_servers]
 server3@192.168.1.49
+
+[file_servers]
+server2@192.168.1.46
+
+[workstations]
+server4@192.168.1.50
