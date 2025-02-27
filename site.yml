@@ -1,0 +1,85 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: Install updates 
+    tags: always
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution in ["Debian", "Ubuntu"]
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+  - name: install apache & php 
+    tags: apache, apache2, ubuntu
+    apt:
+      name: 
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  
+  - name : install Nginx
+    apt:
+      name: nginx 
+      state: latest
+    when: ansible_distribution == "Debian"
+  
+  - name: copy default html file for site
+    tags: apache, apache2
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root 
+      group: root
+      mode: 0644
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+    - name: install mariadb package
+      tags: ubuntu, db, mariadb
+      apt:
+        name: mariadb-server
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: install mariadb package (debian)
+      apt:
+        name: mariadb-server
+        state: latest
+      when: ansible_distribution == "Debian"
+
+- hosts: file_servers
+  become: true
+  tasks:
+
+    - name: Install samba package
+      tags: samba
+      apt:
+        name: samba
+        state: latest
+
+- hosts: workstations
+  become: true
+  tasks:
+
+    - name: install unzip
+      package:
+        name: unzip
+      
+    - name: install terraform
+      unarchive: 
+        src: https://releases.hashicorp.com/terraform/1.11.0/terraform_1.11.0_linux_amd64.zip
+        dest: /usr/local/bin
+        remote_src: yes
+        mode: 0755
+        owner: root
+        group: root
