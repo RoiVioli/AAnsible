@@ -4,11 +4,11 @@
   become: true
   pre_tasks:
 
-  - name: Install updates 
+  - name: Update repo cache
     tags: always
     apt:
-      upgrade: dist
       update_cache: yes
+    changed_when: false
     when: ansible_distribution in ["Debian", "Ubuntu"]
 
 - hosts: web_servers
@@ -25,12 +25,37 @@
     when: ansible_distribution == "Ubuntu"
 
   
-  - name : install Nginx
+  - name : install apache (Debian)
+    tags: debian, apache
     apt:
-      name: nginx 
+      name: apache2 
       state: latest
     when: ansible_distribution == "Debian"
-  
+    
+
+  - name: start apache (Debian)
+    service:
+      name: apache2
+      state: started
+      enabled: yes
+
+
+  - name: change e-mail address for admin
+    tags: apache,debian,apache
+    lineinfile:
+      path: /etc/apache2/sites-available/000-default.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin test@test.test
+    when: ansible_distribution == "Debian"
+    register: apache2
+
+  - name: restart apache (Debian)
+    tags: apache,debian
+    service: 
+      name: apache2
+      state: restarted
+    when: apache2 is defined and apache2.changed
+
   - name: copy default html file for site
     tags: apache, apache2
     copy:
@@ -66,6 +91,33 @@
       apt:
         name: samba
         state: latest
+
+
+- hosts: all
+  become: true
+  tasks:
+
+    - name: create roivioli user 
+      tags: always
+      user:
+        name: roivioli
+        groups: root
+
+    - name: Add ssh key for roivioli
+      tags: always
+      authorized_key:
+        user: roivioli
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPvJdGYZutC6Ibsfmk1cYh+UdP6/wmW9P4ZNvt1HJsF ansible"
+
+    - name: Add sudoers file for roivioli
+      tags: always
+      copy:
+        src: sudoer_roivioli
+        dest: /etc/sudoers.d/roivioli
+        owner: root
+        group: root
+        mode: 0440
+        
 
 - hosts: workstations
   become: true
