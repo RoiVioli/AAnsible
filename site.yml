@@ -2,136 +2,25 @@
 
 - hosts: all
   become: true
-  pre_tasks:
-
-  - name: Update repo cache
-    tags: always
-    apt:
-      update_cache: yes
-    changed_when: false
-    when: ansible_distribution in ["Debian", "Ubuntu"]
+  roles:
+    - base
 
 - hosts: web_servers
   become: true
-  tasks:
-
-  - name: install apache & php 
-    tags: apache, apache2, ubuntu
-    apt:
-      name: 
-        - apache2
-        - libapache2-mod-php
-      state: latest
-    when: ansible_distribution == "Ubuntu"
-
-  
-  - name : install apache (Debian)
-    tags: debian, apache
-    apt:
-      name: apache2 
-      state: latest
-    when: ansible_distribution == "Debian"
-    
-
-  - name: start apache (Debian)
-    service:
-      name: apache2
-      state: started
-      enabled: yes
-
-
-  - name: change e-mail address for admin
-    tags: apache,debian,apache
-    lineinfile:
-      path: /etc/apache2/sites-available/000-default.conf
-      regexp: '^ServerAdmin'
-      line: ServerAdmin test@test.test
-    when: ansible_distribution == "Debian"
-    register: apache2
-
-  - name: restart apache (Debian)
-    tags: apache,debian
-    service: 
-      name: apache2
-      state: restarted
-    when: apache2 is defined and apache2.changed
-
-  - name: copy default html file for site
-    tags: apache, apache2
-    copy:
-      src: default_site.html
-      dest: /var/www/html/index.html
-      owner: root 
-      group: root
-      mode: 0644
+  roles:
+    - web_servers
 
 - hosts: db_servers
   become: true
-  tasks:
-
-    - name: install mariadb package
-      tags: ubuntu, db, mariadb
-      apt:
-        name: mariadb-server
-        state: latest
-      when: ansible_distribution == "Ubuntu"
-
-    - name: install mariadb package (debian)
-      apt:
-        name: mariadb-server
-        state: latest
-      when: ansible_distribution == "Debian"
+  roles:
+    - db_servers
 
 - hosts: file_servers
   become: true
-  tasks:
-
-    - name: Install samba package
-      tags: samba
-      apt:
-        name: samba
-        state: latest
-
-
-- hosts: all
-  become: true
-  tasks:
-
-    - name: create roivioli user 
-      tags: always
-      user:
-        name: roivioli
-        groups: root
-
-    - name: Add ssh key for roivioli
-      tags: always
-      authorized_key:
-        user: roivioli
-        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPvJdGYZutC6Ibsfmk1cYh+UdP6/wmW9P4ZNvt1HJsF ansible"
-
-    - name: Add sudoers file for roivioli
-      tags: always
-      copy:
-        src: sudoer_roivioli
-        dest: /etc/sudoers.d/roivioli
-        owner: root
-        group: root
-        mode: 0440
-        
+  roles:
+    - file_servers
 
 - hosts: workstations
   become: true
-  tasks:
-
-    - name: install unzip
-      package:
-        name: unzip
-      
-    - name: install terraform
-      unarchive: 
-        src: https://releases.hashicorp.com/terraform/1.11.0/terraform_1.11.0_linux_amd64.zip
-        dest: /usr/local/bin
-        remote_src: yes
-        mode: 0755
-        owner: root
-        group: root
+  roles: 
+    - workstations

@@ -1,0 +1,20 @@
+- name: create roivioli user 
+  tags: always
+  user:
+    name: roivioli
+    groups: root
+
+- name: Add ssh key for roivioli
+  tags: always
+  authorized_key:
+    user: roivioli
+    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPvJdGYZutC6Ibsfmk1cYh+UdP6/wmW9P4ZNvt1HJsF ansible"
+
+- name: Add sudoers file for roivioli
+  tags: always
+  copy:
+    src: sudoer_roivioli
+    dest: /etc/sudoers.d/roivioli
+    owner: root
+    group: root
+    mode: 0440

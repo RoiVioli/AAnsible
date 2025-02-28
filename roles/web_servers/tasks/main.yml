@@ -1,0 +1,50 @@
+- name: install apache & php 
+  tags: apache, apache2, ubuntu
+  apt:
+    name: 
+      - apache2
+      - libapache2-mod-php
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+
+- name : install apache (Debian)
+  tags: debian, apache
+  apt:
+    name: apache2 
+    state: latest
+  when: ansible_distribution == "Debian"
+  
+
+- name: start apache (Debian)
+  service:
+    name: apache2
+    state: started
+    enabled: yes
+
+
+
+- name: change e-mail address for admin
+  tags: apache,debian,apache
+  lineinfile:
+    path: /etc/apache2/sites-available/000-default.conf
+    regexp: '^ServerAdmin'
+    line: ServerAdmin test@test.test
+  when: ansible_distribution == "Debian"
+  register: apache2
+
+- name: restart apache (Debian)
+  tags: apache,debian
+  service: 
+    name: apache2
+    state: restarted
+  when: apache2 is defined and apache2.changed
+
+- name: copy default html file for site
+  tags: apache, apache2
+  copy:
+    src: default_site.html
+    dest: /var/www/html/index.html
+    owner: root 
+    group: root
+    mode: 0644
