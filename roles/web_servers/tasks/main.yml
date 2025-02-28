@@ -28,17 +28,11 @@
   tags: apache,debian,apache
   lineinfile:
     path: /etc/apache2/sites-available/000-default.conf
-    regexp: '^ServerAdmin'
-    line: ServerAdmin test@test.test
+    regexp: '^(.*ServerAdmin\s+)[^\s]+'
+    line: '\1test@test.net'
+    backrefs: yes
   when: ansible_distribution == "Debian"
-  register: apache2
-
-- name: restart apache (Debian)
-  tags: apache,debian
-  service: 
-    name: apache2
-    state: restarted
-  when: apache2 is defined and apache2.changed
+  notify: restart_apache
 
 - name: copy default html file for site
   tags: apache, apache2

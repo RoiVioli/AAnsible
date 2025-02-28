@@ -1,0 +1,22 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: install apache & php 
+    apt:
+      name: 
+        - "{{ apache_package }}"
+        - "{{ php_package }}"
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  
+  - name : install Nginx
+    apt:
+      name: nginx 
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Debian"
